@@ -1,0 +1,124 @@
+<html>
+    <head>
+        <title>Piano?</title>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+		<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+		<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+		<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	</head>
+    <body>
+        <div class="container">
+			<h1>Piano?</h1>
+			<canvas id="piano" width="1000" height="90">
+			
+			</canvas> 
+			
+		</div>
+		<script>
+			$(document).ready(function() {
+				var canvas = $('#piano');
+				var c = canvas[0].getContext('2d');
+				var piano = new Piano(canvas.attr('width'), canvas.attr('height'));
+				
+				loop(0);
+				function loop (i) {
+					if(i >= piano.keys.length) i = 0;
+					
+					piano.keys[i].highlight = true;
+					
+					if(i > 0)
+						piano.keys[i-1].highlight = false;
+					else
+						piano.keys[piano.keys.length -1] = false;
+						
+					piano.redraw(c);
+					
+					setTimeout( function() { loop(++i) },400);
+				}
+			});
+			
+			function Piano(width, height) {
+				/* fields */
+				this.keys = new Array();
+				this.width = width;
+				this.height = height;
+				/* construction algorithm */
+				// the width of each key will be? 52 white keys in an 88 key piano so...
+				var keyWidth = this.width / 52;
+				var whole = [
+					true, false, true, false, true, true, //ends on f
+					false, true, false, true, false, true // ends on b
+				];
+				var tone = 0;//start at c
+				var x1 = 0;
+				var i;
+				var temp;
+				for(i = 0; i < 88; i++) {
+					if(tone > 11) tone = 0;//back to c
+					if(whole[tone])  {
+						temp = new Key(x1, 0, x1 + keyWidth, this.height, 'white');
+						x1 += keyWidth;
+					}
+					else {
+						temp = new Key(x1 - (keyWidth / 3), 0, x1 + (keyWidth / 3), this.height / 2, 'black');
+					}
+					this.keys.push(temp);
+					tone++;
+				}
+				
+				/* redraw all keys on the context */
+				this.redraw = function (context) {
+					context.clearRect ( 0 , 0 , context.canvas.width , context.canvas.height );
+					var i;
+					for(i = 0; i < this.keys.length-1; i++) {
+						if(this.keys[i].color === 'white')
+							this.keys[i].drawSelf(context);
+					}
+					for(i = 0; i < this.keys.length-1; i++) {
+						if(this.keys[i].color === 'black')
+							this.keys[i].drawSelf(context);
+					}
+				}
+			}
+			function Key(x1, y1, x2, y2, color) {
+				/* fields */
+				this.color = color;
+				this.x1 = x1;
+				this.x2 = x2;
+				this.y1 = y1;
+				this.y2 = y2;
+				this.highlight = false;
+				/* for debugging... */
+				this.print = function () {
+					console.log(x1 + ' : ' + y1 + ' & ' + x2 + ' : ' + y2);
+				};
+				/* draws the key */
+				this.drawSelf = function (context) {
+					context.beginPath();
+					if(this.color === 'white') {
+						if(this.highlight)
+							context.strokeStyle = "#E6E6E6";
+						else 
+							context.strokeStyle = "#000000";
+						context.rect(
+							this.x1, 
+							this.y1, 
+							this.x2 - this.x1,
+							this.y2 - this.y1);
+					} else {
+						if(this.highlight)
+							context.fillStyle = "#E6E6E6";
+						else 
+							context.fillStyle = "#000000";
+						context.fillRect(
+							this.x1, 
+							this.y1, 
+							this.x2 - this.x1,
+							this.y2 - this.y1);
+					}
+					context.stroke();
+				};
+			}
+		</script>
+    </body>
+</html>
